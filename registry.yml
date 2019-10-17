@@ -1,0 +1,14 @@
+version: '3.2'
+
+services:
+  registry:
+    image: registry:latest
+    volumes:
+      - /scg-docker/LocalRegistry:/var/lib/registry
+    ports:
+      - 5000:5000
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
