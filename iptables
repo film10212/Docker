@@ -1,0 +1,35 @@
+# Version 2.0
+################
+# Filter table #
+################
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -i lo -j ACCEPT
+###################
+# Standard accept #
+###################
+# Accept ESTABLISHED and RELATED state
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+# Accept standard ping request 1 packet/ seconds
+-A INPUT -p icmp --icmp-type 8 -m length --length 1:920 -m state --state NEW -m limit --limit 1/sec -j ACCEPT
+# Accept custom SSH service new connection 10 request / minute
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 222 -m recent --set --name ssh --rsource
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 222 -m recent ! --rcheck --seconds 60 --hitcount 10 --name ssh --rsource -j ACCEPT
+-A INPUT -i docker0 -s 172.16.0.0/12 -j ACCEPT
+-A INPUT -i docker_gwbridge -s 172.16.0.0/12 -j ACCEPT
+-A INPUT -s 10.113.114.0/23 -j ACCEPT
+# Drop silent
+-A INPUT -j DROP
+COMMIT
+# Nat rule
+*nat
+:PREROUTING ACCEPT [0:0]
+:POSTROUTING ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A POSTROUTING -s 172.16.0.0/12 -o ens192 -j MASQUERADE
+#############
+## NAT table #
+##############
+COMMIT
